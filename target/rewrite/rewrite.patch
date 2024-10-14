@@ -1,0 +1,223 @@
+diff --git a/pom.xml b/pom.xml
+index ba6c74b..58962a2 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -5,7 +5,7 @@ org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2
+ 	<parent>
+ 		<groupId>org.springframework.boot</groupId>
+ 		<artifactId>spring-boot-starter-parent</artifactId>
+-		<version>2.7.14</version>
++		<version>3.2.10</version>
+ 		<relativePath/> <!-- lookup parent from repository -->
+ 	</parent>
+ 	<groupId>com.javatechie</groupId>
+@@ -15,7 +15,7 @@
+ 	<description>Demo project for Spring Boot</description>
+ 
+ 	<properties>
+-		<java.version>1.8</java.version>
++		<java.version>17</java.version>
+ 	</properties>
+ 
+ 	<dependencies>
+@@ -41,9 +41,8 @@
+ 			<version>0.7.0</version>
+ 		</dependency>
+ 		<dependency>
+-			<groupId>mysql</groupId>
+-			<artifactId>mysql-connector-java</artifactId>
+-			<version>8.0.33</version>
++			<groupId>com.mysql</groupId>
++			<artifactId>mysql-connector-j</artifactId>
+ 			<scope>runtime</scope>
+ 		</dependency>
+ 		<dependency>
+@@ -55,12 +54,6 @@
+ 			<groupId>org.springframework.boot</groupId>
+ 			<artifactId>spring-boot-starter-test</artifactId>
+ 			<scope>test</scope>
+-			<exclusions>
+-				<exclusion>
+-					<groupId>org.junit.vintage</groupId>
+-					<artifactId>junit-vintage-engine</artifactId>
+-				</exclusion>
+-			</exclusions>
+ 		</dependency>
+ 		<!-- Mockito -->
+ 		<dependency>
+
+diff --git a/src/main/java/com/javatechie/crud/example/config/SecurityConfiguration.java b/src/main/java/com/javatechie/crud/example/config/SecurityConfiguration.java
+index c0756ba..c31c59c 100644
+--- a/src/main/java/com/javatechie/crud/example/config/SecurityConfiguration.java
++++ b/src/main/java/com/javatechie/crud/example/config/SecurityConfiguration.java
+@@ -8,7 +8,7 @@ org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2
+ import org.springframework.context.annotation.Bean;
+ import org.springframework.context.annotation.Configuration;
+ import org.springframework.security.authentication.AuthenticationManager;
+-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
++import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+ import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+ import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+@@ -17,13 +17,15 @@
+ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+ import org.springframework.security.crypto.password.PasswordEncoder;
+ 
++import static org.springframework.security.config.Customizer.withDefaults;
++
+ /**
+  * This class configures all the endpoint security for the application, specifying which endpoints require security.
+  * FYI, a lot of code taken from JHipster
+  */
+ @Configuration
+ @EnableWebSecurity
+-@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
++@EnableMethodSecurity(securedEnabled = true)
+ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+ 
+     @Autowired
+@@ -31,7 +33,7 @@
+ 
+     // Taken from below link during migration from 2.0.0.M3 to 2.o.o.release
+     // https://stackoverflow.com/questions/21633555/how-to-inject-authenticationmanager-using-java-configuration-in-a-custom-filter?answertab=active#tab-top
+-    @Bean
++    /*~~(Migrate manually based on https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter)~~>*/@Bean
+     @Override
+     public AuthenticationManager authenticationManagerBean() throws Exception {
+         return super.authenticationManagerBean();
+@@ -48,28 +50,23 @@
+     @Override
+     protected void configure(HttpSecurity http) throws Exception {
+         http
+-            .cors() //enable cors, by default looks for a corsConfigurationSource bean, defined below
+-        .and()
+-            .exceptionHandling().authenticationEntryPoint(http401UnauthorizedEntryPoint) //return 401 if unauthenticated, so UI can show login
+-        .and()
+-            .csrf().disable()                   //disable csrf since no session
+-            .headers().frameOptions().disable() //modify this if need to disallow iFraming in other apps (no UIs yet)
+-        .and()
+-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) //NO SESSIONS
+-        .and()
+-            // note, all permitAll controller methods that are creating/modifying database entities should be logged in as anonymous user. See securityService.logInAnonymousUser()
+-            .authorizeRequests()
+-                //allow authentication endpoint where user gives username/password and gets a token back
+-                .antMatchers("/auth/authenticate").permitAll()
+-                //NOTE if making endpoints permitAll(), also need to do it security config of odyssey-gateway or else it will block unauthenticated requests
++                .cors(withDefaults())
++                .exceptionHandling(handling -> handling.authenticationEntryPoint(http401UnauthorizedEntryPoint))
++                .csrf(csrf -> csrf.disable())                   //disable csrf since no session
++                .headers(headers -> headers.frameOptions(options -> options.disable()))
++                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
++                // note, all permitAll controller methods that are creating/modifying database entities should be logged in as anonymous user. See securityService.logInAnonymousUser()
++                .authorizeHttpRequests(requests -> requests
++                        //allow authentication endpoint where user gives username/password and gets a token back
++                        .requestMatchers("/auth/authenticate").permitAll()
++                        //NOTE if making endpoints permitAll(), also need to do it security config of odyssey-gateway or else it will block unauthenticated requests
+ 
+-                //securing the Spring Boot management endpoints (including in proxied services) so only developers can view
+-                .antMatchers("/**/application/health").permitAll() //healthcheck endpoint is public
+-                .antMatchers("/**/application/info").permitAll() //info endpoint is public
++                        //securing the Spring Boot management endpoints (including in proxied services) so only developers can view
++                        .requestMatchers("/**/application/health").permitAll() //healthcheck endpoint is public
++                        .requestMatchers("/**/application/info").permitAll() //info endpoint is public
+ 
+-                .antMatchers("/**").authenticated() //IMPORTANT: require authentication for all other calls, must be below exclusions
+-        .and()
+-            .apply(new JWTConfigurer(tokenProvider)); //configures JWTFilter
++                        .requestMatchers("/**").authenticated())
++                .with(new JWTConfigurer(tokenProvider), withDefaults()); //configures JWTFilter
+ 
+     }
+ 
+
+diff --git a/src/main/java/com/javatechie/crud/example/security/jwt/JWTFilter.java b/src/main/java/com/javatechie/crud/example/security/jwt/JWTFilter.java
+index 74ba826..91454c4 100644
+--- a/src/main/java/com/javatechie/crud/example/security/jwt/JWTFilter.java
++++ b/src/main/java/com/javatechie/crud/example/security/jwt/JWTFilter.java
+@@ -5,11 +5,11 @@ org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2
+ import org.springframework.util.StringUtils;
+ import org.springframework.web.filter.GenericFilterBean;
+ 
+-import javax.servlet.FilterChain;
+-import javax.servlet.ServletException;
+-import javax.servlet.ServletRequest;
+-import javax.servlet.ServletResponse;
+-import javax.servlet.http.HttpServletRequest;
++import jakarta.servlet.FilterChain;
++import jakarta.servlet.ServletException;
++import jakarta.servlet.ServletRequest;
++import jakarta.servlet.ServletResponse;
++import jakarta.servlet.http.HttpServletRequest;
+ import java.io.IOException;
+ 
+ /**
+
+diff --git a/src/main/java/com/javatechie/crud/example/security/Http401UnauthorizedEntryPoint.java b/src/main/java/com/javatechie/crud/example/security/Http401UnauthorizedEntryPoint.java
+index 41e165e..1bf0b3a 100644
+--- a/src/main/java/com/javatechie/crud/example/security/Http401UnauthorizedEntryPoint.java
++++ b/src/main/java/com/javatechie/crud/example/security/Http401UnauthorizedEntryPoint.java
+@@ -24,9 +24,9 @@ org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2
+ import org.springframework.security.core.AuthenticationException;
+ import org.springframework.security.web.AuthenticationEntryPoint;
+ 
+-import javax.servlet.ServletException;
+-import javax.servlet.http.HttpServletRequest;
+-import javax.servlet.http.HttpServletResponse;
++import jakarta.servlet.ServletException;
++import jakarta.servlet.http.HttpServletRequest;
++import jakarta.servlet.http.HttpServletResponse;
+ import java.io.IOException;
+ 
+ /**
+
+diff --git a/src/main/java/com/javatechie/crud/example/entity/Product.java b/src/main/java/com/javatechie/crud/example/entity/Product.java
+index 37ddc77..5b03efe 100644
+--- a/src/main/java/com/javatechie/crud/example/entity/Product.java
++++ b/src/main/java/com/javatechie/crud/example/entity/Product.java
+@@ -4,10 +4,10 @@ org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2
+ import lombok.Data;
+ import lombok.NoArgsConstructor;
+ 
+-import javax.persistence.Entity;
+-import javax.persistence.GeneratedValue;
+-import javax.persistence.Id;
+-import javax.persistence.Table;
++import jakarta.persistence.Entity;
++import jakarta.persistence.GeneratedValue;
++import jakarta.persistence.Id;
++import jakarta.persistence.Table;
+ 
+ @Data
+ @AllArgsConstructor
+
+diff --git a/src/main/java/com/javatechie/crud/example/controller/AuthController.java b/src/main/java/com/javatechie/crud/example/controller/AuthController.java
+index 4354c49..9dfd946 100644
+--- a/src/main/java/com/javatechie/crud/example/controller/AuthController.java
++++ b/src/main/java/com/javatechie/crud/example/controller/AuthController.java
+@@ -13,8 +13,8 @@ org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2
+ import org.springframework.security.core.context.SecurityContextHolder;
+ import org.springframework.web.bind.annotation.*;
+ 
+-import javax.servlet.http.HttpServletRequest;
+-import javax.servlet.http.HttpServletResponse;
++import jakarta.servlet.http.HttpServletRequest;
++import jakarta.servlet.http.HttpServletResponse;
+ 
+ /**
+  * Controller to authenticate users.
+
+diff --git a/src/test/java/com/javatechie/crud/example/ProductControllerTest.java b/src/test/java/com/javatechie/crud/example/ProductControllerTest.java
+index 0600bf3..ac4ff17 100644
+--- a/src/test/java/com/javatechie/crud/example/ProductControllerTest.java
++++ b/src/test/java/com/javatechie/crud/example/ProductControllerTest.java
+@@ -5,9 +5,6 @@ org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2
+ import com.javatechie.crud.example.service.ProductService;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+-import org.mockito.InjectMocks;
+-import org.mockito.Mock;
+-import org.mockito.MockitoAnnotations;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+ import org.springframework.boot.test.mock.mockito.MockBean;
+
