@@ -4,7 +4,32 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fe42a3b4-1c49-4f8e-924f-87cdc436488e" name="Changes" comment="" />
+    <list default="true" id="fe42a3b4-1c49-4f8e-924f-87cdc436488e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/javatechie/crud/example/config/CommonConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/javatechie/crud/example/config/CommonConfiguration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/javatechie/crud/example/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/javatechie/crud/example/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/javatechie/crud/example/entity/Product.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/javatechie/crud/example/entity/Product.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/javatechie/crud/example/security/Http401UnauthorizedEntryPoint.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/javatechie/crud/example/security/Http401UnauthorizedEntryPoint.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/SpringBootCrudExample2Application.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/config/CommonConfiguration.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/config/SecurityConfiguration.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/controller/AuthController$JWTToken.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/controller/AuthController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/controller/ProductController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/dto/LoginDTO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/entity/Product.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/repository/ProductRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/security/Http401UnauthorizedEntryPoint.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/security/TTNSpringUserDetails.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/security/jwt/JWTConfigurer.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/security/jwt/JWTFilter.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/security/jwt/JWTUtil.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/security/jwt/TokenProvider.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/service/ProductService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/javatechie/crud/example/service/TTNUserDetailsService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -29,7 +54,7 @@
     "Maven.spring-boot-crud-example-2 [spring-boot:run].executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "Spring Boot.SpringBootCrudExample2Application.executor": "Debug",
-    "git-widget-placeholder": "migrate-3",
+    "git-widget-placeholder": "develop",
     "last_opened_file_path": "/Users/dheerajmadaan/Documents/spring-migrate-km/SimpleAPI_2_7/src/main/java/com/javatechie/crud/example",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -166,7 +191,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1728904685527</updated>
-      <workItem from="1728904687038" duration="9156000" />
+      <workItem from="1728904687038" duration="10143000" />
     </task>
     <servers />
   </component>

@@ -17,7 +17,7 @@ public class CommonConfiguration {
 
     @Bean
     public TokenProvider tokenProvider(Environment env) {
-        String secret = "87f4e91555052cdf4ef1cd02f8a0d31c4a165a5a8c10c0e43481df35e2cbea73edd8d4411710c67f6953d230b5bc6235f06a5614b8e8999f023d85b141756c59";
+        String secret = "secret";
         String ttlSeconds = "60000";
 
         return new TokenProvider(secret, ttlSeconds);

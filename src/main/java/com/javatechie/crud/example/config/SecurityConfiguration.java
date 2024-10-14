@@ -4,19 +4,18 @@ import com.javatechie.crud.example.security.Http401UnauthorizedEntryPoint;
 import com.javatechie.crud.example.security.jwt.JWTConfigurer;
 import com.javatechie.crud.example.security.jwt.TokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-
-import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * This class configures all the endpoint security for the application, specifying which endpoints require security.
@@ -24,19 +23,18 @@ import static org.springframework.security.config.Customizer.withDefaults;
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(securedEnabled = true)
-public class SecurityConfiguration  {
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private TokenProvider tokenProvider;
 
     // Taken from below link during migration from 2.0.0.M3 to 2.o.o.release
     // https://stackoverflow.com/questions/21633555/how-to-inject-authenticationmanager-using-java-configuration-in-a-custom-filter?answertab=active#tab-top
-    /*~~(Migrate manually based on https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter)~~>*/
-
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
     }
 
     @Autowired
@@ -47,27 +45,32 @@ public class SecurityConfiguration  {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
         http
-                .cors(withDefaults())
-                .exceptionHandling(handling -> handling.authenticationEntryPoint(http401UnauthorizedEntryPoint))
-                .csrf(csrf -> csrf.disable())                   //disable csrf since no session
-                .headers(headers -> headers.frameOptions(options -> options.disable()))
-                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // note, all permitAll controller methods that are creating/modifying database entities should be logged in as anonymous user. See securityService.logInAnonymousUser()
-                .authorizeHttpRequests(requests -> requests
-                        //allow authentication endpoint where user gives username/password and gets a token back
-                        .requestMatchers("/auth/authenticate").permitAll()
-                        //NOTE if making endpoints permitAll(), also need to do it security config of odyssey-gateway or else it will block unauthenticated requests
+            .cors() //enable cors, by default looks for a corsConfigurationSource bean, defined below
+        .and()
+            .exceptionHandling().authenticationEntryPoint(http401UnauthorizedEntryPoint) //return 401 if unauthenticated, so UI can show login
+        .and()
+            .csrf().disable()                   //disable csrf since no session
+            .headers().frameOptions().disable() //modify this if need to disallow iFraming in other apps (no UIs yet)
+        .and()
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) //NO SESSIONS
+        .and()
+            // note, all permitAll controller methods that are creating/modifying database entities should be logged in as anonymous user. See securityService.logInAnonymousUser()
+            .authorizeRequests()
+                //allow authentication endpoint where user gives username/password and gets a token back
+                .antMatchers("/auth/authenticate").permitAll()
+                //NOTE if making endpoints permitAll(), also need to do it security config of odyssey-gateway or else it will block unauthenticated requests
 
-                        //securing the Spring Boot management endpoints (including in proxied services) so only developers can view
-                        .requestMatchers("/application/health").permitAll() //healthcheck endpoint is public
-                        .requestMatchers("/application/info").permitAll() //info endpoint is public
+                //securing the Spring Boot management endpoints (including in proxied services) so only developers can view
+                .antMatchers("/**/application/health").permitAll() //healthcheck endpoint is public
+                .antMatchers("/**/application/info").permitAll() //info endpoint is public
 
-                        .requestMatchers("/**").authenticated())
-                .with(new JWTConfigurer(tokenProvider), withDefaults());
-              return http.build();
+                .antMatchers("/**").authenticated() //IMPORTANT: require authentication for all other calls, must be below exclusions
+        .and()
+            .apply(new JWTConfigurer(tokenProvider)); //configures JWTFilter
+
     }
 
     //NOTE: not setting up CORS for dev profile, since this is done in odyssey-gateway,
